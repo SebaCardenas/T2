@@ -89,29 +89,42 @@ int pop(Stack_Dato* stack)
   return pos;
 }
 
+Node* pop_node(Stack* stack){
+  Node *POPpos;
+  POPpos = stack->head;
+  stack -> head = POPpos-> next;
+  stack->len--;
+  return POPpos;
+}
+
 void crear_tablero(Node *tablero, Cell **matrix,int D) {
 
 
     int contador;
+    int contador2;
     int x;
     int y;
-    x = NULL;
-    y = NULL;
+
     contador = 0;
+    contador2 = 0;
     Cell *celula;
     while (tablero->dato->len != 0) {
-      if (tablero->dato->head==tablero->dato->tail || tablero->dato->len ==1) {
+      if (tablero->dato->head==tablero->dato->tail && tablero->dato->len ==1) {
         break;
       }
       if (contador%2==0) {
         y = pop(tablero->dato);
+        contador2++;
       }
       else{
         x = pop(tablero->dato);
-        if (x != NULL && y != NULL){
-          celula = &matrix[D-y-1][x];
-          celula->live = 1;
-        }
+        contador2++;
+      }
+      if (contador2==2){
+        celula = &matrix[D-y-1][x];
+        celula->live = 1;
+        contador2=0;
+      //  printf("%d %d\n",x, y);
       }
 
       contador++;
@@ -401,7 +414,7 @@ int checkear_termino_loop(Stack_Matrix* stack_matrix,Cell **matrix, int D){
 }
 void quit(int sig){
   signal(sig, SIG_IGN);
-  printf("Terminó por: SIGNAL, tiempo de simulación: %d, %d Celulas \n");
+  printf("Los procesos restantes Terminaron por: SIGNAL\n");
   exit(0);
 
 }
@@ -409,6 +422,8 @@ void quit(int sig){
 void GameOfLife(Node* tabla,int A,int B,int C,int D, int tiempo_max, FILE *output_file,struct vivas *estado){
 
   signal(SIGINT,quit);
+
+
   Stack_Matrix *estados;
   estados = matrix_init();
   tabla->vivas=0;
@@ -456,42 +471,46 @@ void GameOfLife(Node* tabla,int A,int B,int C,int D, int tiempo_max, FILE *outpu
 
 
 	while (tiempo_simulacion < tiempo_max) {
+      contador_celulas(matrix,  tabla,  D);
 
 			checkear_condiciones(matrix,A,B,C,D);
 			iteracion_tablero(matrix,  A,  B,  C, D);
 
-			if (checkear_vacio(matrix, A, B, C, D)==0){
+       if(tiempo_simulacion == tiempo_max-1){
         contador_celulas(matrix,  tabla,  D);
-				printf("%s Terminó por: NOCELLS, tiempo de simulación: %d, %d Celulas \n\n\n",tabla->name,tiempo_simulacion, tabla->vivas);
-        fprintf(output_file, "%s,%d, %d, NOCELLS\n",tabla->name,tiempo_simulacion,  tabla->vivas);
-				break;
+        printf("m%s Terminó por: NOTIME, tiempo de simulación: %d, %d Celulas \n\n\n",tabla->name,tiempo_simulacion+1, tabla->vivas);
+        fprintf(output_file, "%s,%d, %d, NOTIME\n",tabla->name,tiempo_simulacion+1, tabla->vivas);
+        break;
 			}
+      else if (tabla->vivas==0){
+        contador_celulas(matrix,  tabla,  D);
+        printf("%s Terminó por: NOCELLS, tiempo de simulación: %d, %d Celulas \n\n\n",tabla->name,tiempo_simulacion, tabla->vivas);
+        fprintf(output_file, "%s,%d, %d, NOCELLS\n",tabla->name,tiempo_simulacion,  tabla->vivas);
+        break;
+      }
 			else if (checkear_termino_loop(estados, matrix, D)==1) {
         contador_celulas(matrix,  tabla,  D);
-				printf("%s Terminó por: LOOP, tiempo de simulación: %d, %d Celulas \n\n\n",tabla->name,tiempo_simulacion, tabla->vivas);
-        fprintf(output_file, "%s,%d, %d, LOOP\n",tabla->name,tiempo_simulacion,  tabla->vivas);
-				break;
-			}
-			else if(tiempo_simulacion == tiempo_max-1){
-        contador_celulas(matrix,  tabla,  D);
-				printf("%s Terminó por: NOTIME, tiempo de simulación: %d, %d Celulas \n\n\n",tabla->name,tiempo_simulacion, tabla->vivas);
-        fprintf(output_file, "%s,%d, %d, NOTIME\n",tabla->name,tiempo_simulacion, tabla->vivas);
+				printf("%s Terminó por: LOOP, tiempo de simulación: %d, %d Celulas \n\n\n",tabla->name,tiempo_simulacion+1, tabla->vivas);
+        fprintf(output_file, "%s,%d, %d, LOOP\n",tabla->name,tiempo_simulacion+1,  tabla->vivas);
 				break;
 			}
       else{
 
-        mostrar_tablero(matrix, D, tabla);
+    //    mostrar_tablero(matrix, D, tabla);
+
 
       }
 
 			guardar_estado(estados, matrix,  A,  B,  C,  D,  tiempo_simulacion);
 
       tiempo_simulacion++;
+
 	}
 
 }
 
 void contador_celulas(Cell **matrix,Node *tabla, int D){
+  tabla->vivas = 0;
   for(int i=0;i<D;i++){
     for(int j=0;j<D;j++){
       Cell *cell;

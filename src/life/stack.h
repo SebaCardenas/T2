@@ -112,6 +112,8 @@ void contador_celulas(Cell **matrix,Node *tabla,int D);
 
 int pop(Stack_Dato* stack);
 
+Node* pop_node(Stack* stack);
+
 void destroy(Stack *stack);
 
 int random_number(int min_num, int max_num);

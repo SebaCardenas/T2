@@ -82,10 +82,30 @@ int main(int argc, char *argv[])
 		contador = 0;
 
 	}
-	Node*actual;
-	Node*Next;
-	actual = tablas->head;
-	Next = actual->next;
+
+
+Stack *tablas2;
+tablas2 = stack_init();
+Node *ac;
+while(tablas->len>1){
+
+	ac = pop_node(tablas);
+	printf("name: %s   id: %d\n",ac->name, ac->ID);
+	ac->next = tablas2->head;
+	tablas2->head = ac;
+	tablas2->len++;
+}
+
+printf("1 %s\n",tablas2->head->name);
+printf("2 %s\n",tablas2->head->next->name);
+printf("3 %s\n",tablas2->head->next->next->name);
+printf("4 %s\n",tablas2->head->next->next->next->name);
+
+
+Node*actual;
+Node*Next;
+actual = tablas2->head;
+Next = actual->next;
 
 struct vivas * estado;
 estado = (struct vivas *) malloc(sizeof(struct vivas));
@@ -94,22 +114,22 @@ glob_var = 1;
 glob_var = mmap(NULL, sizeof *glob_var, PROT_READ | PROT_WRITE,
 								MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
-for(int i=0;i<tablas->len-1;i++)
-    {
+for(int i=0;i<tablas2->len;i++)
+    {printf("i: %d\n",i );
         if(vfork() == 0)
         {
 					GameOfLife(actual,A,B,C,D,tiempo_max,output_file, estado);
 						_exit(0);
         }
 
-
+				if (actual->next==NULL) {
+					break;
+				}
 				actual = Next;
 				Next=actual->next;
     }
 //
-for (size_t l = 0; l < tablas->len-1; l++) {
-	wait(NULL);
-}
+
 //printf("jejejeje\n" );
 //printf("------------%d---------------%d\n",estado,estado->live);
 
